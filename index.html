@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D0 — Proactive Trading Agent</title>
 <style>
-/* ═══ RESET ═══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0a0b0f;--bg2:#12131a;--bg3:#1a1b26;--bg4:#252736;
@@ -16,12 +15,12 @@
   --red:#ef4444;--red-dim:rgba(239,68,68,.12);
   --orange:#f59e0b;--orange-dim:rgba(245,158,11,.12);
   --blue:#3b82f6;--blue-dim:rgba(59,130,246,.12);
-  --cyan:#06b6d4;
+  --cyan:#06b6d4;--cyan-dim:rgba(6,182,212,.12);
   --r:10px;--r-sm:6px;--r-lg:14px;
   --ease:cubic-bezier(.4,0,.2,1);
 }
 html{font-size:13px}
-body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
 
 /* ═══ TOP NAV ═══ */
@@ -36,21 +35,24 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .nav-pill:hover:not(.active){color:var(--text)}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .pnl-badge{background:var(--green-dim);color:var(--green);padding:3px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace}
+.trust-badge{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;background:var(--purple-dim);color:var(--purple);transition:all .2s var(--ease)}
+.trust-badge:hover{background:rgba(168,85,247,.2)}
+.trust-badge .num{font-family:'SF Mono','JetBrains Mono',monospace}
 .status-dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 6px var(--green)}
 .env-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
 
 /* ═══ PAGES ═══ */
 .page{display:none;height:calc(100vh - 46px - 32px);overflow:hidden}
 .page.active{display:flex}
-#page-dashboard.active{display:block;overflow-y:auto}
+#page-portfolio.active{display:block;overflow-y:auto}
 
 /* ═══ TERMINAL PAGE ═══ */
-/* Sidebar */
 .sidebar{width:240px;min-width:240px;border-right:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
 .sidebar-header{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:4px}
 .sidebar-tab{flex:1;text-align:center;padding:5px 0;font-size:11px;font-weight:500;color:var(--text3);cursor:pointer;border-radius:var(--r-sm);transition:all .2s var(--ease)}
 .sidebar-tab.active{background:var(--purple-dim);color:var(--purple)}
-.sidebar-content{flex:1;overflow-y:auto;padding:8px}
+.sidebar-content{flex:1;overflow-y:auto;padding:8px;display:none}
+.sidebar-content.active{display:block}
 .chat-item{padding:10px;border-radius:var(--r);cursor:pointer;margin-bottom:4px;transition:all .15s var(--ease)}
 .chat-item:hover{background:var(--bg3)}
 .chat-item.active{background:var(--bg4);border:1px solid var(--border2)}
@@ -76,14 +78,13 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .chart-price{font-family:'SF Mono','JetBrains Mono',monospace;font-size:13px;font-weight:600}
 .chart-change{font-size:11px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace}
 .chart-change.up{color:var(--green)}
-.chart-change.down{color:var(--red)}
 .chart-tf{display:flex;gap:2px;margin-left:auto}
 .chart-tf-btn{padding:3px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;font-weight:500}
 .chart-tf-btn.active{background:var(--bg4);color:var(--text)}
 .chart-canvas-wrap{flex:1;position:relative;background:var(--bg)}
 .chart-canvas-wrap canvas{width:100%;height:100%}
 .chart-overlay{position:absolute;right:12px;top:8px;display:flex;flex-direction:column;gap:4px;pointer-events:none}
-.chart-level{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace;white-space:nowrap}
+.chart-level{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace}
 .chart-level.tp{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.25)}
 .chart-level.entry{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
 .chart-level.sl{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.25)}
@@ -100,7 +101,11 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .chat-panel-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .chat-panel-header .icon{font-size:14px}
 .chat-panel-header .label{font-size:12px;font-weight:600}
-.chat-panel-header .path-tag{font-size:9px;padding:2px 6px;border-radius:10px;background:var(--purple-dim);color:var(--purple);font-weight:600;margin-left:auto}
+.chat-panel-header .mode-pills{display:flex;gap:2px;background:var(--bg);border-radius:6px;padding:2px;margin-left:8px}
+.mode-pill{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:500;cursor:pointer;color:var(--text3);transition:all .2s var(--ease)}
+.mode-pill.active{background:var(--bg4);color:var(--text)}
+.pending-badge{background:var(--orange);color:#000;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:auto;animation:badge-pulse 2s infinite}
+@keyframes badge-pulse{0%,100%{opacity:1}50%{opacity:.7}}
 .chat-messages{flex:1;overflow-y:auto;padding:12px}
 .chat-msg{margin-bottom:12px;animation:msg-in .3s var(--ease)}
 @keyframes msg-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -109,7 +114,56 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .chat-msg.agent .bubble{background:var(--bg3);padding:10px 12px;border-radius:4px var(--r) var(--r) var(--r);font-size:12px;line-height:1.6;max-width:95%;border:1px solid var(--border)}
 .chat-msg.agent .bubble .agent-label{font-size:10px;color:var(--purple);font-weight:600;margin-bottom:4px}
 
-/* Structured cards in chat */
+/* Console mode */
+.console-view{flex:1;overflow-y:auto;padding:12px;display:none}
+.console-view.active{display:block}
+.console-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:100%}
+.console-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.console-card-title{padding:8px 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px}
+.console-card-body{padding:10px;overflow-y:auto;max-height:calc(100% - 36px)}
+
+/* Playbook items in console */
+.pb-item{padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .15s var(--ease)}
+.pb-item:hover{border-color:var(--purple)}
+.pb-item .pb-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.pb-item .pb-dot{width:6px;height:6px;border-radius:50%}
+.pb-item .pb-dot.active{background:var(--green)}
+.pb-item .pb-dot.stopped{background:var(--red)}
+.pb-item .pb-name{font-size:11px;font-weight:500;flex:1}
+.pb-item .pb-mode{font-size:9px;padding:1px 5px;border-radius:8px;font-weight:600}
+.pb-item .pb-mode.auto{background:var(--green-dim);color:var(--green)}
+.pb-item .pb-mode.confirm{background:var(--orange-dim);color:var(--orange)}
+.pb-item .pb-meta{font-size:10px;color:var(--text3)}
+
+/* Trust score panel in console */
+.trust-ring{width:80px;height:80px;border-radius:50%;border:4px solid var(--border);display:flex;align-items:center;justify-content:center;margin:12px auto;position:relative}
+.trust-ring .score{font-size:22px;font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace;color:var(--purple)}
+.trust-ring .label{font-size:8px;color:var(--text3);position:absolute;bottom:-2px}
+.trust-factor{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px}
+.trust-factor .fname{color:var(--text2);flex:1}
+.trust-factor .fval{font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace}
+.trust-factor .fbar{width:60px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.trust-factor .fbar-fill{height:100%;border-radius:2px}
+.trust-action{margin-top:8px;padding:8px;border-radius:var(--r-sm);background:var(--purple-dim);font-size:10px;color:var(--purple);line-height:1.5}
+
+/* Queue items */
+.q-item{padding:8px;border-radius:var(--r-sm);margin-bottom:6px;border-left:3px solid}
+.q-item.upgrade{border-color:var(--purple);background:rgba(168,85,247,.05)}
+.q-item.execute{border-color:var(--orange);background:rgba(245,158,11,.05)}
+.q-item.degrade{border-color:var(--text3);background:rgba(107,114,128,.05)}
+.q-type{font-size:9px;font-weight:600;padding:1px 5px;border-radius:8px;display:inline-block;margin-bottom:4px}
+.q-type.upgrade{background:var(--purple-dim);color:var(--purple)}
+.q-type.execute{background:var(--orange-dim);color:var(--orange)}
+.q-type.degrade{background:rgba(107,114,128,.15);color:var(--text3)}
+.q-title{font-size:11px;font-weight:500;margin-bottom:3px}
+.q-meta{font-size:10px;color:var(--text3)}
+.q-actions{display:flex;gap:4px;margin-top:6px}
+.q-btn{padding:3px 10px;border-radius:4px;border:none;font-size:10px;font-weight:600;cursor:pointer}
+.q-btn.approve{background:var(--green);color:#000}
+.q-btn.reject{background:var(--bg4);color:var(--text2)}
+.q-btn.ack{background:var(--bg4);color:var(--text2)}
+
+/* Cards in chat */
 .chat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;animation:card-in .4s var(--ease)}
 @keyframes card-in{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .card-header{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600}
@@ -120,6 +174,10 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .card-header .path.verifier{background:var(--green-dim);color:var(--green)}
 .card-header .path.approval{background:var(--orange-dim);color:var(--orange)}
 .card-header .path.execution{background:var(--cyan);color:#000}
+.thesis-tag{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:600;margin-left:4px}
+.thesis-tag.event{background:var(--orange-dim);color:var(--orange)}
+.thesis-tag.swing{background:var(--blue-dim);color:var(--blue)}
+.thesis-tag.value{background:var(--green-dim);color:var(--green)}
 .card-body{padding:12px}
 .card-body p{font-size:11.5px;color:var(--text2);line-height:1.6;margin-bottom:8px}
 .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
@@ -127,8 +185,6 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .card-grid-item .label{font-size:10px;color:var(--text3);margin-bottom:3px}
 .card-grid-item .value{font-size:12px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace}
 .card-grid-item .sub{font-size:10px;color:var(--text3);margin-top:2px}
-
-/* Verification checklist */
 .check-list{display:flex;flex-direction:column;gap:6px}
 .check-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg4);font-size:11px}
 .check-item .icon{font-size:12px;width:18px;text-align:center}
@@ -138,14 +194,22 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .check-item .val{font-family:'SF Mono','JetBrains Mono',monospace;font-weight:600;font-size:11px}
 .check-summary{padding:8px 10px;border-radius:var(--r-sm);margin-top:8px;font-size:11px;font-weight:500}
 .check-summary.pass{background:var(--green-dim);color:var(--green)}
-
-/* Approval card */
 .approval-actions{display:flex;gap:8px;margin-top:10px}
 .approval-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s var(--ease)}
 .approval-btn.approve{background:var(--green);color:#000}
 .approval-btn.approve:hover{background:#4ade80}
 .approval-btn.reject{background:var(--bg4);color:var(--text2);border:1px solid var(--border)}
-.approval-btn.reject:hover{background:var(--bg3)}
+.trace{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.trace-step{display:flex;align-items:center;gap:6px;font-size:10px;padding:4px 0}
+.trace-step .num{width:18px;height:18px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:9px;color:var(--purple)}
+.trace-step .line{flex:1;height:1px;background:var(--border)}
+.trace-step .label{color:var(--text2)}
+.exec-confirmed{background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(168,85,247,.08));border:1px solid rgba(6,182,212,.3);border-radius:var(--r);padding:12px;margin-top:8px}
+.exec-confirmed .title{font-size:12px;font-weight:600;color:var(--cyan);margin-bottom:8px}
+.exec-detail{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+.exec-detail .k{color:var(--text3)}
+.exec-detail .v{font-weight:500}
+.autocheck{display:flex;align-items:center;gap:4px;font-size:9px;padding:3px 6px;border-radius:4px;background:var(--cyan-dim);color:var(--cyan);font-weight:600;margin-top:6px;width:fit-content}
 
 /* Chat input */
 .chat-input-area{padding:10px;border-top:1px solid var(--border)}
@@ -156,8 +220,6 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .chat-send{width:28px;height:28px;border-radius:var(--r-sm);background:var(--purple2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s var(--ease)}
 .chat-send:hover{background:var(--purple)}
 .chat-send svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-/* Typing indicator */
 .typing{display:flex;gap:4px;padding:8px 12px}
 .typing span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:blink 1.4s infinite both}
 .typing span:nth-child(2){animation-delay:.2s}
@@ -174,15 +236,13 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .sb-sep{width:1px;height:14px;background:var(--border)}
 .sb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
 
-/* ═══ DASHBOARD PAGE ═══ */
-.dashboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;grid-auto-rows:min-content}
+/* ═══ PORTFOLIO PAGE ═══ */
+.portfolio{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;grid-auto-rows:min-content}
 .dash-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;overflow:hidden}
 .dash-card.full{grid-column:1/-1}
 .dash-title{font-size:12px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .dash-title .icon{font-size:14px}
 .dash-title .count{font-size:10px;background:var(--purple-dim);color:var(--purple);padding:1px 6px;border-radius:8px;margin-left:auto}
-
-/* Positions table */
 .pos-row{display:flex;align-items:center;padding:8px 10px;border-radius:var(--r-sm);gap:10px;margin-bottom:4px}
 .pos-row:hover{background:var(--bg3)}
 .pos-sym{font-weight:600;font-size:12px;width:50px}
@@ -193,14 +253,16 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .pos-pnl{font-size:12px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace;text-align:right}
 .pos-pnl.up{color:var(--green)}
 .pos-pnl.down{color:var(--red)}
-
-/* Risk controls */
 .risk-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:var(--r-sm);margin-bottom:4px;background:var(--bg3)}
 .risk-label{font-size:11px;color:var(--text2)}
 .risk-value{font-size:11px;font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace}
 .risk-lock{font-size:10px;color:var(--text3)}
-
-/* Activity log */
+.pnl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pnl-stat{padding:10px;border-radius:var(--r-sm);background:var(--bg3)}
+.pnl-stat .label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.pnl-stat .value{font-size:16px;font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace}
+.pnl-stat .change{font-size:10px;margin-top:2px}
+.pnl-stat .change.up{color:var(--green)}
 .log-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,45,62,.5);font-size:11px}
 .log-item:last-child{border-bottom:none}
 .log-time{color:var(--text3);font-family:'SF Mono','JetBrains Mono',monospace;min-width:40px;font-size:10px}
@@ -211,16 +273,32 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .log-tag.executor{background:var(--cyan);color:#000}
 .log-tag.risk{background:var(--red-dim);color:var(--red)}
 .log-text{color:var(--text2);flex:1;line-height:1.4}
+.bot-info{display:flex;flex-direction:column;gap:8px}
+.bot-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(42,45,62,.4);font-size:11px}
+.bot-row:last-child{border-bottom:none}
+.bot-row .k{color:var(--text3)}
+.bot-row .v{font-weight:500}
+.bot-row .v.online{color:var(--green)}
 
-/* P&L stats */
-.pnl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pnl-stat{padding:10px;border-radius:var(--r-sm);background:var(--bg3)}
-.pnl-stat .label{font-size:10px;color:var(--text3);margin-bottom:4px}
-.pnl-stat .value{font-size:16px;font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace}
-.pnl-stat .change{font-size:10px;margin-top:2px}
-.pnl-stat .change.up{color:var(--green)}
+/* Trade Journal */
+.journal-row{display:grid;grid-template-columns:56px 44px 40px 1fr 60px 54px 38px;gap:6px;align-items:center;padding:6px 8px;border-bottom:1px solid rgba(42,45,62,.4);font-size:10px}
+.journal-row.header{color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)}
+.journal-row .grade{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px}
+.journal-row .grade.a{background:var(--green-dim);color:var(--green)}
+.journal-row .grade.b{background:var(--orange-dim);color:var(--orange)}
+.journal-row .grade.c{background:var(--red-dim);color:var(--red)}
+.journal-row .pnl{font-weight:600;font-family:'SF Mono','JetBrains Mono',monospace;text-align:right}
+.journal-row .exit-type{font-size:9px;padding:1px 4px;border-radius:3px}
+.journal-row .exit-type.planned{background:var(--green-dim);color:var(--green)}
+.journal-row .exit-type.unplanned{background:var(--red-dim);color:var(--red)}
 
-/* Approval inbox items */
+/* Pattern Insights */
+.pattern-card{background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(59,130,246,.06));border:1px solid rgba(168,85,247,.2);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.pattern-card .pattern-title{font-size:11px;font-weight:600;color:var(--purple);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.pattern-card .pattern-text{font-size:11px;color:var(--text2);line-height:1.5}
+.pattern-card .pattern-stat{font-size:10px;color:var(--text3);margin-top:6px}
+
+/* Inbox items in portfolio */
 .inbox-item{padding:10px;border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:all .2s var(--ease)}
 .inbox-item:hover{border-color:var(--purple)}
 .inbox-item.pending{border-left:3px solid var(--orange)}
@@ -230,112 +308,65 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
 .inbox-status.approved{background:var(--green-dim);color:var(--green)}
 .inbox-title{font-size:12px;font-weight:500;margin:6px 0 4px}
 .inbox-meta{font-size:10px;color:var(--text3)}
-
-/* Bot status */
-.bot-info{display:flex;flex-direction:column;gap:8px}
-.bot-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(42,45,62,.4);font-size:11px}
-.bot-row:last-child{border-bottom:none}
-.bot-row .k{color:var(--text3)}
-.bot-row .v{font-weight:500}
-.bot-row .v.online{color:var(--green)}
-
-/* Decision trace */
-.trace{display:flex;flex-direction:column;gap:2px;margin-top:8px}
-.trace-step{display:flex;align-items:center;gap:6px;font-size:10px;padding:4px 0}
-.trace-step .num{width:18px;height:18px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:9px;color:var(--purple)}
-.trace-step .line{flex:1;height:1px;background:var(--border)}
-.trace-step .label{color:var(--text2)}
-
-/* Execution confirmed */
-.exec-confirmed{background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(168,85,247,.08));border:1px solid rgba(6,182,212,.3);border-radius:var(--r);padding:12px;margin-top:8px}
-.exec-confirmed .title{font-size:12px;font-weight:600;color:var(--cyan);margin-bottom:8px}
-.exec-detail{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
-.exec-detail .k{color:var(--text3)}
-.exec-detail .v{font-weight:500}
 </style>
 </head>
 <body>
 
-<!-- TOP NAV -->
 <nav class="topnav">
   <div class="logo"><div class="dot"></div>D0 <span>by Donut</span></div>
   <div class="nav-pills">
-    <div class="nav-pill active" onclick="switchPage('terminal')">Terminal</div>
-    <div class="nav-pill" onclick="switchPage('dashboard')">Dashboard</div>
+    <div class="nav-pill active" data-page="terminal">Terminal</div>
+    <div class="nav-pill" data-page="portfolio">Portfolio</div>
   </div>
   <div class="nav-right">
     <div class="pnl-badge">NAV $127,440</div>
+    <div class="trust-badge" title="Trust Score — 点击展开详情"><span>🛡️</span> <span class="num">75</span></div>
     <div class="env-status"><div class="status-dot"></div> D0-001 Online</div>
   </div>
 </nav>
 
-<!-- TERMINAL PAGE -->
+<!-- ═══ TERMINAL ═══ -->
 <div class="page active" id="page-terminal">
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-tab active" onclick="switchSidebarTab(this,'tab-chats')">对话</div>
-      <div class="sidebar-tab" onclick="switchSidebarTab(this,'tab-signals')">信号 <span class="new-dot"></span></div>
+      <div class="sidebar-tab active" data-tab="tab-chats">对话</div>
+      <div class="sidebar-tab" data-tab="tab-signals">信号 <span class="new-dot"></span></div>
     </div>
-    <div class="sidebar-content" id="tab-chats">
-      <div class="chat-item active">
-        <div class="title">JUP 回购事件分析</div>
-        <div class="meta">今天 14:32 · 进行中</div>
-      </div>
-      <div class="chat-item">
-        <div class="title">SOL 鲸鱼流入趋势跟踪</div>
-        <div class="meta">3月23日 · 已执行</div>
-      </div>
-      <div class="chat-item">
-        <div class="title">ETH 升级前瞻分析</div>
-        <div class="meta">3月20日 · 已关闭</div>
-      </div>
-      <div class="chat-item">
-        <div class="title">BTC 宏观压力位判断</div>
-        <div class="meta">3月18日</div>
-      </div>
+    <div class="sidebar-content active" id="tab-chats">
+      <div class="chat-item active"><div class="title">JUP 回购事件分析</div><div class="meta">今天 14:32 · 进行中</div></div>
+      <div class="chat-item"><div class="title">SOL 鲸鱼流入趋势跟踪</div><div class="meta">3月23日 · 已执行</div></div>
+      <div class="chat-item"><div class="title">ETH 升级前瞻分析</div><div class="meta">3月20日 · 已关闭</div></div>
     </div>
-    <div class="sidebar-content" id="tab-signals" style="display:none">
+    <div class="sidebar-content" id="tab-signals">
       <div class="sidebar-section">实时信号</div>
-      <div class="signal-item" id="signal-jup" onclick="clickSignal('jup')">
+      <div class="signal-item" id="signal-jup">
         <div class="badge event">Event</div>
         <div class="title">JUP 官宣 Q2 $150M 回购</div>
         <div class="desc">Solana DeFi 首个大规模代币回购，情绪共振强烈</div>
-        <div class="stats">
-          <span class="stat green">+12%</span>
-          <span class="stat">OI +$42M</span>
-          <span class="stat">94/100</span>
-        </div>
+        <div class="stats"><span class="stat green">+12%</span><span class="stat">OI +$42M</span><span class="stat">94/100</span></div>
       </div>
-      <div class="signal-item" onclick="clickSignal('sol')">
+      <div class="signal-item">
         <div class="badge onchain">On-chain</div>
         <div class="title">SOL 巨鲸连续净流入</div>
         <div class="desc">交易所余额新低，历史上提前 7-14 天预示上涨</div>
-        <div class="stats">
-          <span class="stat green">+8.4%</span>
-          <span class="stat">胜率 68%</span>
-        </div>
+        <div class="stats"><span class="stat green">+8.4%</span><span class="stat">胜率 68%</span></div>
       </div>
       <div class="sidebar-section">宏观日历</div>
       <div style="padding:4px 10px">
         <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:flex;justify-content:space-between"><span>Today</span><span style="color:var(--orange)">美联储讲话 Powell</span></div>
         <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:flex;justify-content:space-between"><span>Mar 27</span><span>GDP Q4 终值</span></div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:6px;display:flex;justify-content:space-between"><span>Apr 2</span><span>非农就业</span></div>
+        <div style="font-size:10px;color:var(--text3);display:flex;justify-content:space-between"><span>Apr 2</span><span>非农就业</span></div>
       </div>
     </div>
   </div>
 
-  <!-- Chart Area -->
   <div class="chart-area">
     <div class="chart-header">
-      <div class="chart-symbol" id="chart-sym">JUP/USDT</div>
-      <div class="chart-price" id="chart-px">$1.284</div>
-      <div class="chart-change up" id="chart-chg">+12.3%</div>
+      <div class="chart-symbol">JUP/USDT</div>
+      <div class="chart-price">$1.284</div>
+      <div class="chart-change up">+12.3%</div>
       <div class="chart-tf">
-        <div class="chart-tf-btn">15m</div>
-        <div class="chart-tf-btn active">1H</div>
-        <div class="chart-tf-btn">4H</div>
-        <div class="chart-tf-btn">1D</div>
+        <div class="chart-tf-btn">15m</div><div class="chart-tf-btn active">1H</div><div class="chart-tf-btn">4H</div><div class="chart-tf-btn">1D</div>
       </div>
     </div>
     <div class="chart-canvas-wrap">
@@ -352,681 +383,405 @@ body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;backgroun
     </div>
   </div>
 
-  <!-- Chat Panel -->
   <div class="chat-panel">
     <div class="chat-panel-header">
       <span class="icon">🤖</span>
-      <span class="label">D0 Terminal</span>
-      <span class="path-tag">Research Path</span>
+      <span class="label">D0</span>
+      <div class="mode-pills">
+        <div class="mode-pill active" data-mode="chat">对话</div>
+        <div class="mode-pill" data-mode="console">操作台</div>
+      </div>
+      <span class="pending-badge" id="pending-count" style="display:none">1</span>
     </div>
-    <div class="chat-messages" id="chat-messages">
-      <!-- Welcome message -->
-      <div class="chat-msg agent">
-        <div class="bubble">
-          <div class="agent-label">D0</div>
-          Markets are moving — SOL 鲸鱼持续增持，JUP 刚宣布 $150M 回购。你的 SOL 仓位 +8.1%。左侧信号栏有 2 条新信号，要看看吗？
+
+    <!-- Chat mode -->
+    <div class="chat-messages active" id="chat-messages">
+      <div class="chat-msg agent"><div class="bubble"><div class="agent-label">D0</div>Markets are moving — SOL 鲸鱼持续增持，JUP 刚宣布 $150M 回购。你的 SOL 仓位 +8.1%。左侧信号栏有 2 条新信号，要看看吗？</div></div>
+    </div>
+
+    <!-- Console mode -->
+    <div class="console-view" id="console-view">
+      <div class="console-cols">
+        <div class="console-card">
+          <div class="console-card-title">📋 Playbooks + Trust Score</div>
+          <div class="console-card-body">
+            <div class="pb-item">
+              <div class="pb-head"><span class="pb-dot active"></span><span class="pb-name">SOL 提币信号趋势</span><span class="pb-mode auto">全自动</span></div>
+              <div class="pb-meta">持仓中 +$407 · 论文健康 ✓</div>
+            </div>
+            <div class="pb-item">
+              <div class="pb-head"><span class="pb-dot stopped"></span><span class="pb-name">BTC 宏观支撑波段</span><span class="pb-mode confirm">需确认</span></div>
+              <div class="pb-meta">已止损 · P&L -$380</div>
+            </div>
+            <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+              <div class="trust-ring"><span class="score">75</span><span class="label">TRUST</span></div>
+              <div class="trust-factor"><span class="fname">历史表现 (40%)</span><span class="fval">82</span><div class="fbar"><div class="fbar-fill" style="width:82%;background:var(--green)"></div></div></div>
+              <div class="trust-factor"><span class="fname">市场环境 (35%)</span><span class="fval">61</span><div class="fbar"><div class="fbar-fill" style="width:61%;background:var(--orange)"></div></div></div>
+              <div class="trust-factor"><span class="fname">预案覆盖 (25%)</span><span class="fval">78</span><div class="fbar"><div class="fbar-fill" style="width:78%;background:var(--purple)"></div></div></div>
+              <div class="trust-action">💡 再部署 1 个 Playbook 即可解锁全自动开仓权限 → 预计 +3 分</div>
+            </div>
+          </div>
+        </div>
+        <div class="console-card">
+          <div class="console-card-title">📬 待处理队列</div>
+          <div class="console-card-body">
+            <div class="q-item upgrade">
+              <span class="q-type upgrade">信任升级</span>
+              <div class="q-title">JUP 请求主动开仓权限</div>
+              <div class="q-meta">价格进入入场区间 · 历史同类胜率 71%</div>
+              <div class="q-actions"><button class="q-btn approve">批准</button><button class="q-btn reject">拒绝</button></div>
+            </div>
+            <div class="q-item execute">
+              <span class="q-type execute">执行确认</span>
+              <div class="q-title">SOL 止盈触发确认</div>
+              <div class="q-meta">当前 +8.1% · 接近 TP $165</div>
+              <div class="q-actions"><button class="q-btn approve">确认</button><button class="q-btn reject">稍后</button></div>
+            </div>
+            <div class="q-item degrade">
+              <span class="q-type degrade">降级通知</span>
+              <div class="q-title">BTC 止损后自动降级</div>
+              <div class="q-meta">主动开仓 → 防御执行</div>
+              <div class="q-actions"><button class="q-btn ack">了解</button></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
     <div class="chat-input-area">
       <div class="chat-input-wrap">
         <input class="chat-input" id="chat-input" placeholder="问任何关于信号、分析或交易的问题..." onkeydown="if(event.key==='Enter')sendMessage()">
-        <button class="chat-send" onclick="sendMessage()">
-          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-        </button>
+        <button class="chat-send" onclick="sendMessage()"><svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- DASHBOARD PAGE -->
-<div class="page" id="page-dashboard">
-  <div class="dashboard">
-    <!-- Bot Status -->
-    <div class="dash-card">
-      <div class="dash-title"><span class="icon">🤖</span> Bot Status</div>
-      <div class="bot-info">
-        <div class="bot-row"><span class="k">Bot ID</span><span class="v">D0-001</span></div>
-        <div class="bot-row"><span class="k">状态</span><span class="v online">● Online</span></div>
-        <div class="bot-row"><span class="k">Environment</span><span class="v">Healthy (CPU 12%, Mem 340MB)</span></div>
-        <div class="bot-row"><span class="k">Uptime</span><span class="v">14d 7h 23m</span></div>
-        <div class="bot-row"><span class="k">LLM Model</span><span class="v">claude-sonnet-4-6</span></div>
-        <div class="bot-row"><span class="k">MCP Tools</span><span class="v">22 active / 260 available</span></div>
-        <div class="bot-row"><span class="k">Today API Cost</span><span class="v">$2.47</span></div>
-      </div>
-    </div>
-
-    <!-- Approval Inbox -->
-    <div class="dash-card">
-      <div class="dash-title"><span class="icon">📬</span> Approval Inbox <span class="count">1 pending</span></div>
-      <div class="inbox-item pending">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span class="inbox-status pending">待审批</span>
-          <span style="font-size:10px;color:var(--text3)">3 min ago</span>
-        </div>
-        <div class="inbox-title">JUP 回购事件驱动 LONG</div>
-        <div class="inbox-meta">入场 $1.18–1.22 · SL $1.10 · TP $1.58 · 仓位 $2,400 (2% NAV)</div>
-        <div class="inbox-meta" style="color:var(--green)">验证通过 4/5 · Sharpe 2.14 · R:R 1:2.6</div>
-      </div>
-      <div class="inbox-item approved">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span class="inbox-status approved">已批准</span>
-          <span style="font-size:10px;color:var(--text3)">Mar 23</span>
-        </div>
-        <div class="inbox-title">SOL 提币信号趋势 LONG</div>
-        <div class="inbox-meta">入场 $142 · 仓位 $5,000 · 当前 +$407 (+8.1%)</div>
-      </div>
-      <div class="inbox-item approved">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span class="inbox-status approved">已批准</span>
-          <span style="font-size:10px;color:var(--text3)">Mar 20</span>
-        </div>
-        <div class="inbox-title">BTC 宏观压力位 SHORT</div>
-        <div class="inbox-meta">已止损 · P&L -$380</div>
-      </div>
-    </div>
-
-    <!-- Active Positions -->
-    <div class="dash-card">
-      <div class="dash-title"><span class="icon">📊</span> Active Positions</div>
-      <div class="pos-row">
-        <span class="pos-sym">JUP</span>
-        <span class="pos-dir long">LONG</span>
-        <span class="pos-size">$2,400 @ $1.218</span>
-        <span class="pos-pnl up">+$447 (+18.7%)</span>
-      </div>
-      <div class="pos-row">
-        <span class="pos-sym">SOL</span>
-        <span class="pos-dir long">LONG</span>
-        <span class="pos-size">$5,000 @ $142.00</span>
-        <span class="pos-pnl up">+$407 (+8.1%)</span>
-      </div>
-    </div>
-
-    <!-- Risk Controls (GRPS) -->
-    <div class="dash-card">
-      <div class="dash-title"><span class="icon">🛡️</span> Risk Controls (GRPS)</div>
-      <div class="risk-row">
-        <span class="risk-label">单日最大亏损</span>
-        <span class="risk-value">-$1,200</span>
-        <span class="risk-lock">🔒 锁定</span>
-      </div>
-      <div class="risk-row">
-        <span class="risk-label">单笔最大规模</span>
-        <span class="risk-value">$5,000</span>
-        <span class="risk-lock">🔒 锁定</span>
-      </div>
-      <div class="risk-row">
-        <span class="risk-label">最大并发持仓</span>
-        <span class="risk-value">4 笔</span>
-        <span class="risk-lock">🔒 锁定</span>
-      </div>
-      <div class="risk-row">
-        <span class="risk-label">资金转移</span>
-        <span class="risk-value" style="color:var(--red)">禁止</span>
-        <span class="risk-lock">🔒 锁定</span>
-      </div>
-      <div class="risk-row">
-        <span class="risk-label">Circuit Breaker</span>
-        <span class="risk-value" style="color:var(--green)">正常</span>
-        <span class="risk-lock">自动</span>
-      </div>
-    </div>
-
-    <!-- P&L Overview -->
+<!-- ═══ PORTFOLIO ═══ -->
+<div class="page" id="page-portfolio">
+  <div class="portfolio">
     <div class="dash-card">
       <div class="dash-title"><span class="icon">💰</span> P&L Overview</div>
       <div class="pnl-grid">
-        <div class="pnl-stat">
-          <div class="label">Total NAV</div>
-          <div class="value">$127,440</div>
-          <div class="change up">▲ $4,820 本月</div>
-        </div>
-        <div class="pnl-stat">
-          <div class="label">持仓 P&L</div>
-          <div class="value" style="color:var(--green)">+$854</div>
-          <div class="change up">2 active positions</div>
-        </div>
-        <div class="pnl-stat">
-          <div class="label">Win Rate</div>
-          <div class="value">68%</div>
-          <div class="change">17W / 8L (30 笔)</div>
-        </div>
-        <div class="pnl-stat">
-          <div class="label">Max Drawdown</div>
-          <div class="value">-8.2%</div>
-          <div class="change">阈值 -15%</div>
-        </div>
+        <div class="pnl-stat"><div class="label">Total NAV</div><div class="value">$127,440</div><div class="change up">▲ $4,820 本月</div></div>
+        <div class="pnl-stat"><div class="label">持仓 P&L</div><div class="value" style="color:var(--green)">+$854</div><div class="change up">2 active positions</div></div>
+        <div class="pnl-stat"><div class="label">Win Rate</div><div class="value">68%</div><div class="change">17W / 8L (30 笔)</div></div>
+        <div class="pnl-stat"><div class="label">Max Drawdown</div><div class="value">-8.2%</div><div class="change">阈值 -15%</div></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-title"><span class="icon">📊</span> Active Positions</div>
+      <div class="pos-row"><span class="pos-sym">JUP</span><span class="pos-dir long">LONG</span><span class="pos-size">$2,400 @ $1.218</span><span class="pos-pnl up">+$447 (+18.7%)</span></div>
+      <div class="pos-row"><span class="pos-sym">SOL</span><span class="pos-dir long">LONG</span><span class="pos-size">$5,000 @ $142.00</span><span class="pos-pnl up">+$407 (+8.1%)</span></div>
+    </div>
+
+    <!-- Trade Journal -->
+    <div class="dash-card full">
+      <div class="dash-title"><span class="icon">📓</span> Trade Journal <span class="count">近 30 笔</span></div>
+      <div class="journal-row header"><span>日期</span><span>资产</span><span>方向</span><span>Thesis / 出场触发</span><span style="text-align:right">P&L</span><span style="text-align:right">R:R</span><span>评分</span></div>
+      <div class="journal-row"><span>Mar 25</span><span style="font-weight:600">JUP</span><span style="color:var(--green)">LONG</span><span style="font-size:10px;color:var(--text2)">回购事件驱动 · <span class="exit-type planned">计划内</span></span><span class="pnl" style="color:var(--green)">+$447</span><span style="text-align:right;font-family:monospace">1:2.6</span><span><span class="grade a">A</span></span></div>
+      <div class="journal-row"><span>Mar 23</span><span style="font-weight:600">SOL</span><span style="color:var(--green)">LONG</span><span style="font-size:10px;color:var(--text2)">提币信号趋势 · <span class="exit-type planned">计划内</span></span><span class="pnl" style="color:var(--green)">+$407</span><span style="text-align:right;font-family:monospace">1:1.8</span><span><span class="grade a">A</span></span></div>
+      <div class="journal-row"><span>Mar 20</span><span style="font-weight:600">BTC</span><span style="color:var(--red)">SHORT</span><span style="font-size:10px;color:var(--text2)">宏观压力位 · <span class="exit-type unplanned">计划外</span></span><span class="pnl" style="color:var(--red)">-$380</span><span style="text-align:right;font-family:monospace">-0.8</span><span><span class="grade c">C</span></span></div>
+      <div class="journal-row"><span>Mar 18</span><span style="font-weight:600">ETH</span><span style="color:var(--green)">LONG</span><span style="font-size:10px;color:var(--text2)">升级预期 · <span class="exit-type planned">计划内</span></span><span class="pnl" style="color:var(--green)">+$620</span><span style="text-align:right;font-family:monospace">1:2.1</span><span><span class="grade a">A</span></span></div>
+      <div class="journal-row"><span>Mar 15</span><span style="font-weight:600">AAVE</span><span style="color:var(--green)">LONG</span><span style="font-size:10px;color:var(--text2)">TVL 突破 · <span class="exit-type planned">计划内</span></span><span class="pnl" style="color:var(--green)">+$183</span><span style="text-align:right;font-family:monospace">1:1.4</span><span><span class="grade b">B</span></span></div>
+    </div>
+
+    <!-- Pattern Insights -->
+    <div class="dash-card">
+      <div class="dash-title"><span class="icon">🧠</span> Pattern Insights <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px">近 30 笔滚动窗口</span></div>
+      <div class="pattern-card">
+        <div class="pattern-title">⚠️ 计划外出场亏损放大</div>
+        <div class="pattern-text">你的计划外出场交易平均亏损是计划内的 2.3 倍，且 3/4 发生在 FOMC 前后 48 小时。</div>
+        <div class="pattern-stat">置信度 87% · 样本 8 笔 · 建议：FOMC 窗口内缩小仓位或使用全自动止损</div>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-title">✅ Event Trading 优势明显</div>
+        <div class="pattern-text">Event 类型交易胜率 78% (vs 波段 54%)，平均 R:R 1:2.3。你的 thesis 结构化质量在 Event 类最高。</div>
+        <div class="pattern-stat">置信度 72% · 样本 14 笔 · 建议：增加 Event 仓位占比</div>
       </div>
     </div>
 
-    <!-- Activity Log -->
+    <!-- GRPS -->
     <div class="dash-card">
+      <div class="dash-title"><span class="icon">🛡️</span> Risk Controls (GRPS)</div>
+      <div class="risk-row"><span class="risk-label">单日最大亏损</span><span class="risk-value">-$1,200</span><span class="risk-lock">🔒 锁定</span></div>
+      <div class="risk-row"><span class="risk-label">单笔最大规模</span><span class="risk-value">$5,000</span><span class="risk-lock">🔒 锁定</span></div>
+      <div class="risk-row"><span class="risk-label">最大并发持仓</span><span class="risk-value">4 笔</span><span class="risk-lock">🔒 锁定</span></div>
+      <div class="risk-row"><span class="risk-label">资金转移</span><span class="risk-value" style="color:var(--red)">禁止</span><span class="risk-lock">🔒 锁定</span></div>
+      <div class="risk-row"><span class="risk-label">Circuit Breaker</span><span class="risk-value" style="color:var(--green)">正常</span><span class="risk-lock">自动</span></div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="dash-card full">
       <div class="dash-title"><span class="icon">📋</span> Activity Log — Decision Trace</div>
-      <div class="log-item">
-        <span class="log-time">14:38</span>
-        <span class="log-tag planner">Planner</span>
-        <span class="log-text">JUP 交易计划生成 — Entry $1.18-1.22, SL $1.10, TP $1.58</span>
-      </div>
-      <div class="log-item">
-        <span class="log-time">14:36</span>
-        <span class="log-tag verifier">Verifier</span>
-        <span class="log-text">Backtest 验证通过 4/5 — Sharpe 2.14, Drawdown 17.2% (警告)</span>
-      </div>
-      <div class="log-item">
-        <span class="log-time">14:34</span>
-        <span class="log-tag research">Research</span>
-        <span class="log-text">JUP 回购信号分析完成 — 信号强度 84/100, 历史胜率 71%</span>
-      </div>
-      <div class="log-item">
-        <span class="log-time">14:32</span>
-        <span class="log-tag research">Research</span>
-        <span class="log-text">检测到 Event 信号: Jupiter Q2 $150M 回购计划</span>
-      </div>
-      <div class="log-item">
-        <span class="log-time">09:14</span>
-        <span class="log-tag executor">Executor</span>
-        <span class="log-text">SOL 止损触发 — 价格跌破支撑位，防御执行已激活</span>
-      </div>
-      <div class="log-item">
-        <span class="log-time">09:10</span>
-        <span class="log-tag risk">GRPS</span>
-        <span class="log-text">SOL 止损后自动检查 — 当日亏损 -$380, 未触发 Circuit Breaker</span>
-      </div>
+      <div class="log-item"><span class="log-time">14:38</span><span class="log-tag planner">Planner</span><span class="log-text">JUP 交易计划生成 — Entry $1.18-1.22, SL $1.10, TP $1.58</span></div>
+      <div class="log-item"><span class="log-time">14:36</span><span class="log-tag verifier">Verifier</span><span class="log-text">AutoResearch 验证通过 5/6 — Sharpe 2.14, Robustness 64, Drawdown 17.2% (警告)</span></div>
+      <div class="log-item"><span class="log-time">14:34</span><span class="log-tag research">Research</span><span class="log-text">JUP 回购信号分析完成 — 信号强度 84/100, 历史胜率 71%</span></div>
+      <div class="log-item"><span class="log-time">14:32</span><span class="log-tag research">Research</span><span class="log-text">检测到 Event 信号: Jupiter Q2 $150M 回购计划</span></div>
+      <div class="log-item"><span class="log-time">09:14</span><span class="log-tag executor">Executor</span><span class="log-text">BTC 止损触发 — 决策质量 C (计划外出场)</span></div>
+      <div class="log-item"><span class="log-time">09:10</span><span class="log-tag risk">GRPS</span><span class="log-text">BTC 止损后信任降级 — 主动开仓 → 防御执行，分数 75 → 72</span></div>
     </div>
   </div>
 </div>
 
-<!-- STATUS BAR -->
 <div class="statusbar">
-  <div class="sb-item"><span class="dot green"></span> <span>JUP</span> <span class="val up">+$447</span></div>
+  <div class="sb-item"><span class="dot green"></span><span>JUP</span> <span class="val up">+$447</span></div>
   <div class="sb-sep"></div>
-  <div class="sb-item"><span class="dot green"></span> <span>SOL</span> <span class="val up">+$407</span></div>
+  <div class="sb-item"><span class="dot green"></span><span>SOL</span> <span class="val up">+$407</span></div>
   <div class="sb-sep"></div>
-  <div class="sb-item"><span>📊 2 Active Positions</span></div>
+  <div class="sb-item">📋 2 Playbooks Active</div>
   <div class="sb-right">
-    <div class="sb-item"><span>🛡️ GRPS</span> <span class="val" style="color:var(--green)">Normal</span></div>
+    <div class="sb-item">🛡️ GRPS <span class="val" style="color:var(--green)">Normal</span></div>
     <div class="sb-sep"></div>
-    <div class="sb-item"><span>Research Path</span> <span class="val" style="color:var(--blue)">Active</span></div>
+    <div class="sb-item">🔐 Trust <span class="val" style="color:var(--purple)">75</span></div>
     <div class="sb-sep"></div>
-    <div class="sb-item"><span>Execution Path</span> <span class="val" style="color:var(--cyan)">Standby</span></div>
+    <div class="sb-item">Research <span class="val" style="color:var(--blue)">Active</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item">Execution <span class="val" style="color:var(--cyan)">Standby</span></div>
   </div>
 </div>
 
 <script>
-// ═══ STATE ═══
 let chatStep = 0;
-const chatFlow = [
-  // step 0: user clicks signal → auto research
-  // step 1: user says "可以做" / "做个计划" → plan
-  // step 2: user says "验证" / "verify" / "跑" → verification
-  // step 3: user says "提交" / "执行" → approval inbox
-  // step 4: user clicks approve → execution confirmed
-];
 
-// ═══ PAGE SWITCHING ═══
-function switchPage(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  event.target.classList.add('active');
-  if (page === 'terminal') resizeChart();
-}
+// Page switching
+document.querySelectorAll('.nav-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.nav-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    document.getElementById('page-' + p.dataset.page).classList.add('active');
+    if (p.dataset.page === 'terminal') resizeChart();
+  });
+});
 
-// ═══ SIDEBAR TABS ═══
-function switchSidebarTab(el, tabId) {
-  document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.sidebar-content').forEach(c => c.style.display = 'none');
-  document.getElementById(tabId).style.display = 'block';
-}
+// Sidebar tabs
+document.querySelectorAll('.sidebar-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.sidebar-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
 
-// ═══ SIGNAL CLICK ═══
-function clickSignal(sym) {
+// Chat/Console mode toggle
+document.querySelectorAll('.mode-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.mode-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    const isConsole = p.dataset.mode === 'console';
+    document.getElementById('chat-messages').classList.toggle('active', !isConsole);
+    document.getElementById('chat-messages').style.display = isConsole ? 'none' : '';
+    document.getElementById('console-view').classList.toggle('active', isConsole);
+  });
+});
+
+// Signal click
+document.getElementById('signal-jup').addEventListener('click', () => {
   if (chatStep > 0) return;
   chatStep = 1;
-  const msgs = document.getElementById('chat-messages');
+  // Switch to chat mode
+  document.querySelectorAll('.mode-pill').forEach(x => x.classList.remove('active'));
+  document.querySelector('.mode-pill[data-mode="chat"]').classList.add('active');
+  document.getElementById('chat-messages').style.display = '';
+  document.getElementById('chat-messages').classList.add('active');
+  document.getElementById('console-view').classList.remove('active');
   
-  // Show signal brought into chat
-  addAgentMsg('检测到信号 — JUP 宣布 $150M Q2 回购计划。我来拉一下链上数据和历史同类事件...');
-  
-  // Show chart levels
-  setTimeout(() => {
-    document.getElementById('chart-levels').style.display = 'flex';
-  }, 500);
-  
-  // After delay, show research card
+  document.getElementById('chart-levels').style.display = 'flex';
+  addAgentMsg('检测到 Event 信号 — JUP 宣布 $150M Q2 回购计划。拉链上数据和历史同类事件...');
   setTimeout(() => {
     showTyping();
     setTimeout(() => {
       removeTyping();
       addResearchCard();
-      addAgentMsg('信号强度不错。要我做个交易计划吗？输入「做个计划」或「可以做」');
+      addAgentMsg('信号强度不错，历史同类事件胜率 71%。要做个交易计划吗？输入「做个计划」');
     }, 1800);
   }, 800);
-}
+});
 
-// ═══ SEND MESSAGE ═══
+// Auto switch to signals tab on load
+setTimeout(() => {
+  document.querySelectorAll('.sidebar-tab').forEach(x => x.classList.remove('active'));
+  document.querySelector('.sidebar-tab[data-tab="tab-signals"]').classList.add('active');
+  document.querySelectorAll('.sidebar-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-signals').classList.add('active');
+}, 800);
+
 function sendMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
-  
   addUserMsg(text);
-  
   const lower = text.toLowerCase();
-  
+
   if (chatStep === 1 && (lower.includes('计划') || lower.includes('可以做') || lower.includes('可以') || lower.includes('做'))) {
     chatStep = 2;
     showTyping();
-    setTimeout(() => {
-      removeTyping();
-      addPlanCard();
-      addAgentMsg('计划已生成。需要跑验证吗？输入「验证」或「跑 backtest」');
-    }, 1500);
+    setTimeout(() => { removeTyping(); addPlanCard(); addAgentMsg('Plan 生成完毕。跑 backtest 验证？输入「验证」或「跑 backtest」'); }, 1500);
   } else if (chatStep === 2 && (lower.includes('验证') || lower.includes('verify') || lower.includes('backtest') || lower.includes('跑'))) {
     chatStep = 3;
     showTyping();
-    setTimeout(() => {
-      removeTyping();
-      addVerificationCard();
-      addAgentMsg('验证通过 (4/5)。要提交到审批收件箱吗？输入「提交」');
-    }, 2000);
+    setTimeout(() => { removeTyping(); addVerificationCard(); addAgentMsg('AutoResearch 验证通过 (5/6)。提交到审批收件箱？输入「提交」'); }, 2000);
   } else if (chatStep === 3 && (lower.includes('提交') || lower.includes('执行') || lower.includes('submit') || lower.includes('上'))) {
     chatStep = 4;
+    document.getElementById('pending-count').style.display = '';
     showTyping();
-    setTimeout(() => {
-      removeTyping();
-      addApprovalCard();
-      addAgentMsg('已提交到审批收件箱。在 Dashboard → Approval Inbox 中也可以查看。确认后 Agent 会在入场条件达成时通过 Execution Path 自动执行。');
-    }, 1200);
+    setTimeout(() => { removeTyping(); addApprovalCard(); addAgentMsg('已进入 Approval Inbox。可在操作台查看完整队列。确认后 Agent 通过 Execution Path 自动执行。'); }, 1200);
   } else {
     showTyping();
-    setTimeout(() => {
-      removeTyping();
-      if (chatStep === 0) {
-        addAgentMsg('你好！左侧信号栏有新信号，点击可以带入分析。或者直接问我任何市场问题。');
-      } else {
-        addAgentMsg('收到。还有什么需要分析的吗？');
-      }
-    }, 1000);
+    setTimeout(() => { removeTyping(); addAgentMsg(chatStep === 0 ? '左侧信号栏有新信号，点击可以带入分析。或者直接问我市场问题。' : '收到。还有什么需要分析的？'); }, 800);
   }
 }
 
-// ═══ CHAT HELPERS ═══
-function addUserMsg(text) {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-msg user';
-  div.innerHTML = `<div class="bubble">${esc(text)}</div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function addAgentMsg(text) {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-msg agent';
-  div.innerHTML = `<div class="bubble"><div class="agent-label">D0</div>${text}</div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function showTyping() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'typing';
-  div.id = 'typing-indicator';
-  div.innerHTML = '<span></span><span></span><span></span>';
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function removeTyping() {
-  const el = document.getElementById('typing-indicator');
-  if (el) el.remove();
-}
-
+function addUserMsg(t) { const d = document.createElement('div'); d.className = 'chat-msg user'; d.innerHTML = `<div class="bubble">${esc(t)}</div>`; appendChat(d); }
+function addAgentMsg(t) { const d = document.createElement('div'); d.className = 'chat-msg agent'; d.innerHTML = `<div class="bubble"><div class="agent-label">D0</div>${t}</div>`; appendChat(d); }
+function appendChat(el) { const m = document.getElementById('chat-messages'); m.appendChild(el); m.scrollTop = m.scrollHeight; }
+function showTyping() { const d = document.createElement('div'); d.className = 'typing'; d.id = 'typing-indicator'; d.innerHTML = '<span></span><span></span><span></span>'; appendChat(d); }
+function removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-// ═══ STRUCTURED CARDS ═══
 function addResearchCard() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-card';
-  div.innerHTML = `
-    <div class="card-header">
-      <span class="icon">🔬</span> Research — JUP 回购事件
-      <span class="path research">Research Path</span>
-    </div>
-    <div class="card-body">
-      <p>Jupiter 宣布 $150M 协议收入回购，Q2 执行。历史类似事件（BNB 回购、UNI fee switch）平均涨幅 +23%。当前 OI 异常高 (+$42M)，短期有过热风险。链上鲸鱼 12m 前刚建仓 $1.8M。</p>
-      <div class="card-grid">
-        <div class="card-grid-item">
-          <div class="label">综合信号强度</div>
-          <div class="value" style="color:var(--green)">84/100</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">历史同类事件胜率</div>
-          <div class="value">71%</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">平均 R:R</div>
-          <div class="value">1:2.4</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">置信度</div>
-          <div class="value" style="color:var(--orange)">中高</div>
-          <div class="sub">MCP 数据 + LLM 推理</div>
-        </div>
-      </div>
-    </div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+  const d = document.createElement('div'); d.className = 'chat-card';
+  d.innerHTML = `<div class="card-header"><span class="icon">🔬</span> Research — JUP 回购事件 <span class="thesis-tag event">Event Trading</span><span class="path research">Research Path</span></div>
+  <div class="card-body">
+    <p>Jupiter 宣布 $150M 协议收入回购，Q2 执行。历史类似事件（BNB 回购、UNI fee switch）平均涨幅 +23%。当前 OI 异常高 (+$42M)，短期有过热风险。链上鲸鱼 12m 前刚建仓 $1.8M。</p>
+    <div class="card-grid">
+      <div class="card-grid-item"><div class="label">综合信号强度</div><div class="value" style="color:var(--green)">84/100</div></div>
+      <div class="card-grid-item"><div class="label">历史同类胜率</div><div class="value">71%</div><div class="sub">12 笔同类事件</div></div>
+      <div class="card-grid-item"><div class="label">平均 R:R</div><div class="value">1:2.4</div></div>
+      <div class="card-grid-item"><div class="label">置信度</div><div class="value" style="color:var(--orange)">中高</div><div class="sub">MCP 数据 + LLM 推理</div></div>
+    </div></div>`;
+  appendChat(d);
 }
 
 function addPlanCard() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-card';
-  div.innerHTML = `
-    <div class="card-header">
-      <span class="icon">📐</span> Plan — JUP 回购事件驱动 LONG
-      <span class="path planner">Planner Output</span>
+  const d = document.createElement('div'); d.className = 'chat-card';
+  d.innerHTML = `<div class="card-header"><span class="icon">📐</span> Plan — JUP 回购事件驱动 LONG <span class="thesis-tag event">Event</span><span class="path planner">Planner</span></div>
+  <div class="card-body">
+    <div class="card-grid">
+      <div class="card-grid-item"><div class="label">入场条件</div><div class="value">$1.18–1.22</div><div class="sub">回调至支撑区</div></div>
+      <div class="card-grid-item"><div class="label">失效条件</div><div class="value" style="color:var(--red)">回购暂停</div><div class="sub">或跌破 $1.08</div></div>
+      <div class="card-grid-item"><div class="label">止损 / 目标</div><div class="value">$1.10 / $1.58</div><div class="sub">R:R = 1:2.6</div></div>
+      <div class="card-grid-item"><div class="label">建议仓位</div><div class="value">2% NAV</div><div class="sub">约 $2,400</div></div>
     </div>
-    <div class="card-body">
-      <div class="card-grid">
-        <div class="card-grid-item">
-          <div class="label">入场条件</div>
-          <div class="value">$1.18–1.22</div>
-          <div class="sub">回调至支撑区</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">失效条件</div>
-          <div class="value" style="color:var(--red)">回购暂停</div>
-          <div class="sub">或跌破 $1.08</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">止损 / 目标</div>
-          <div class="value">$1.10 / $1.58</div>
-          <div class="sub">R:R = 1:2.6</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">建议仓位</div>
-          <div class="value">2% NAV</div>
-          <div class="sub">约 $2,400</div>
-        </div>
-      </div>
-      <div style="margin-top:10px;padding:6px 8px;border-radius:var(--r-sm);background:var(--orange-dim);color:var(--orange);font-size:10px;text-align:center">
-        ⚠️ Planner 输出 — 需 Verifier 验证后方可进入 Execution Path
-      </div>
-    </div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+    <div style="margin-top:10px;padding:6px 8px;border-radius:var(--r-sm);background:var(--orange-dim);color:var(--orange);font-size:10px;text-align:center">⚠️ Planner 输出 — 需 Verifier 验证后方可进入 Execution Path</div>
+  </div>`;
+  appendChat(d);
 }
 
 function addVerificationCard() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-card';
-  div.innerHTML = `
-    <div class="card-header">
-      <span class="icon">✅</span> Verification — Backtest Results
-      <span class="path verifier">Verifier Output</span>
+  const d = document.createElement('div'); d.className = 'chat-card';
+  d.innerHTML = `<div class="card-header"><span class="icon">✅</span> Verification — Backtest Results <span class="path verifier">Verifier</span></div>
+  <div class="card-body">
+    <div class="autocheck">🔬 AutoResearch Verified · engine v2.1</div>
+    <div class="check-list" style="margin-top:8px">
+      <div class="check-item"><span class="icon pass">✓</span><span class="name">IS Sharpe > 1.5</span><span class="val" style="color:var(--green)">2.14</span></div>
+      <div class="check-item"><span class="icon pass">✓</span><span class="name">OOS vs IS 衰减 < 30%</span><span class="val" style="color:var(--green)">-18%</span></div>
+      <div class="check-item"><span class="icon pass">✓</span><span class="name">样本数 ≥ 30 笔</span><span class="val" style="color:var(--green)">47 笔</span></div>
+      <div class="check-item"><span class="icon warn">!</span><span class="name">Max Drawdown < 15%</span><span class="val" style="color:var(--orange)">17.2%</span></div>
+      <div class="check-item"><span class="icon pass">✓</span><span class="name">Walk-forward (3/4 窗口正收益)</span><span class="val" style="color:var(--green)">Pass</span></div>
+      <div class="check-item"><span class="icon pass">✓</span><span class="name">Robustness Score ≥ 50</span><span class="val" style="color:var(--green)">64</span></div>
     </div>
-    <div class="card-body">
-      <div class="check-list">
-        <div class="check-item"><span class="icon pass">✓</span><span class="name">IS Sharpe > 1.5</span><span class="val" style="color:var(--green)">2.14</span></div>
-        <div class="check-item"><span class="icon pass">✓</span><span class="name">OOS vs IS 衰减 < 30%</span><span class="val" style="color:var(--green)">-18%</span></div>
-        <div class="check-item"><span class="icon pass">✓</span><span class="name">样本数 ≥ 30 笔</span><span class="val" style="color:var(--green)">47 笔</span></div>
-        <div class="check-item"><span class="icon warn">!</span><span class="name">Max Drawdown < 15%</span><span class="val" style="color:var(--orange)">17.2%</span></div>
-        <div class="check-item"><span class="icon pass">✓</span><span class="name">R:R ≥ 1:2</span><span class="val" style="color:var(--green)">1:2.6</span></div>
-      </div>
-      <div style="margin-top:8px;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg4);font-size:10px;color:var(--text2)">
-        <span style="color:var(--green)">✓ GRPS 风控检查通过</span> — 仓位 $2,400 未超限，当日亏损额度剩余 $820
-      </div>
-      <div class="check-summary pass">✓ 验证通过 (4/5) — Drawdown 略超但其他指标强劲，可提交审批</div>
-    </div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+    <div style="margin-top:8px;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg4);font-size:10px;color:var(--text2)"><span style="color:var(--green)">✓ GRPS 风控检查通过</span> — 仓位 $2,400 未超限，当日亏损额度剩余 $820</div>
+    <div class="check-summary pass">✓ 验证通过 (5/6) — Drawdown 略超但 Robustness 64, Walk-forward 通过，可提交审批</div>
+  </div>`;
+  appendChat(d);
 }
 
 function addApprovalCard() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-card';
-  div.innerHTML = `
-    <div class="card-header">
-      <span class="icon">📬</span> Approval Inbox — JUP 回购事件驱动
-      <span class="path approval">Pending Approval</span>
+  const d = document.createElement('div'); d.className = 'chat-card';
+  d.innerHTML = `<div class="card-header"><span class="icon">📬</span> Approval Inbox — JUP 回购事件驱动 <span class="path approval">Pending</span></div>
+  <div class="card-body">
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">完整决策链 — Signal → Research → Plan → Verify → <span style="color:var(--orange);font-weight:600">Approve?</span></p>
+    <div class="card-grid">
+      <div class="card-grid-item"><div class="label">执行模式</div><div class="value" style="font-size:11px">Agent 自动止损</div><div class="sub">开仓需入场条件触发</div></div>
+      <div class="card-grid-item"><div class="label">仓位</div><div class="value">$2,400</div><div class="sub">2% NAV</div></div>
+      <div class="card-grid-item"><div class="label">止损 / 目标</div><div class="value">$1.10 / $1.58</div></div>
+      <div class="card-grid-item"><div class="label">Trust 影响</div><div class="value" style="font-size:11px;color:var(--purple)">覆盖率 +3</div><div class="sub">75 → 预计 78</div></div>
     </div>
-    <div class="card-body">
-      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">完整决策链 — Signal → Research → Plan → Verify → <strong style="color:var(--orange)">Approve?</strong></p>
-      <div class="card-grid">
-        <div class="card-grid-item">
-          <div class="label">执行模式</div>
-          <div class="value" style="font-size:11px">Agent 自动止损</div>
-          <div class="sub">开仓需入场条件触发</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">仓位</div>
-          <div class="value">$2,400</div>
-          <div class="sub">2% NAV</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">止损 / 目标</div>
-          <div class="value">$1.10 / $1.58</div>
-        </div>
-        <div class="card-grid-item">
-          <div class="label">GRPS 熔断</div>
-          <div class="value" style="font-size:11px">日亏 < $1,200</div>
-        </div>
-      </div>
-      <div class="trace">
-        <div class="trace-step"><span class="num">1</span><span class="label">Signal 检测</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">2</span><span class="label">Research 分析</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">3</span><span class="label">Planner 计划</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">4</span><span class="label">Verifier 验证</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num" style="border-color:var(--orange);color:var(--orange)">5</span><span class="label" style="color:var(--orange)">等待审批</span><span class="line"></span></div>
-      </div>
-      <div class="approval-actions">
-        <button class="approval-btn approve" onclick="approveExecution()">批准执行</button>
-        <button class="approval-btn reject">拒绝</button>
-      </div>
-    </div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
+    <div class="trace">
+      <div class="trace-step"><span class="num">1</span><span class="label">Signal</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">2</span><span class="label">Research</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">3</span><span class="label">Planner</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">4</span><span class="label">Verifier</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num" style="border-color:var(--orange);color:var(--orange)">5</span><span class="label" style="color:var(--orange)">等待审批</span><span class="line"></span></div>
+    </div>
+    <div class="approval-actions">
+      <button class="approval-btn approve" onclick="approveExecution()">批准执行</button>
+      <button class="approval-btn reject">拒绝</button>
+    </div>
+  </div>`;
+  appendChat(d);
 }
 
 function approveExecution() {
   if (chatStep < 4) return;
   chatStep = 5;
-  
-  // Update status bar
-  const sbRight = document.querySelector('.sb-right');
-  sbRight.innerHTML = `
-    <div class="sb-item"><span>🛡️ GRPS</span> <span class="val" style="color:var(--green)">Normal</span></div>
-    <div class="sb-sep"></div>
-    <div class="sb-item"><span>Research Path</span> <span class="val" style="color:var(--blue)">Active</span></div>
-    <div class="sb-sep"></div>
-    <div class="sb-item"><span>Execution Path</span> <span class="val" style="color:var(--cyan)">Monitoring</span></div>
-  `;
-  
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'chat-card';
-  div.innerHTML = `
-    <div class="card-header">
-      <span class="icon">🚀</span> Execution Authorized
-      <span class="path execution">Execution Path</span>
+  document.getElementById('pending-count').style.display = 'none';
+  const d = document.createElement('div'); d.className = 'chat-card';
+  d.innerHTML = `<div class="card-header"><span class="icon">🚀</span> Execution Authorized <span class="path execution">Execution Path</span></div>
+  <div class="card-body">
+    <div class="exec-confirmed">
+      <div class="title">✓ JUP 回购事件驱动 — Playbook 已部署</div>
+      <div class="exec-detail"><span class="k">执行模式</span><span class="v">入场条件触发后自动开仓 · 止损自动执行</span></div>
+      <div class="exec-detail"><span class="k">监控</span><span class="v">Agent 24/7 监控入场区间 $1.18–1.22</span></div>
+      <div class="exec-detail"><span class="k">风控</span><span class="v">GRPS 约束激活 · Circuit Breaker 就绪</span></div>
+      <div class="exec-detail"><span class="k">Trust</span><span class="v" style="color:var(--purple)">75 → 78 (预案覆盖率 +3)</span></div>
+      <div class="exec-detail"><span class="k">通知</span><span class="v">触发/成交/止损均会推送</span></div>
     </div>
-    <div class="card-body">
-      <div class="exec-confirmed">
-        <div class="title">✓ JUP 回购事件驱动 — 已授权</div>
-        <div class="exec-detail"><span class="k">执行模式</span><span class="v">入场条件触发后自动开仓 · 止损自动执行</span></div>
-        <div class="exec-detail"><span class="k">监控</span><span class="v">Agent 24/7 监控入场区间 $1.18–1.22</span></div>
-        <div class="exec-detail"><span class="k">风控</span><span class="v">GRPS 约束激活 · Circuit Breaker 就绪</span></div>
-        <div class="exec-detail"><span class="k">通知</span><span class="v">触发/成交/止损均会推送 TG + Web</span></div>
-      </div>
-      <div class="trace" style="margin-top:12px">
-        <div class="trace-step"><span class="num">1</span><span class="label">Signal</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">2</span><span class="label">Research</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">3</span><span class="label">Plan</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">4</span><span class="label">Verify</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num">5</span><span class="label">Approve</span><span class="line"></span></div>
-        <div class="trace-step"><span class="num" style="background:var(--cyan);color:#000;border-color:var(--cyan)">6</span><span class="label" style="color:var(--cyan)">Executor 监控中</span><span class="line"></span></div>
-      </div>
-    </div>`;
-  msgs.appendChild(div);
-  
-  addAgentMsg('执行已授权 ✓ Agent 会在 Execution Path 上持续监控入场条件。所有执行动作通过 GRPS 风控约束。有任何变化会第一时间通知你。');
-  
-  msgs.scrollTop = msgs.scrollHeight;
+    <div class="trace" style="margin-top:12px">
+      <div class="trace-step"><span class="num">1</span><span class="label">Signal</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">2</span><span class="label">Research</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">3</span><span class="label">Plan</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">4</span><span class="label">Verify</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num">5</span><span class="label">Approve</span><span class="line"></span></div>
+      <div class="trace-step"><span class="num" style="background:var(--cyan);color:#000;border-color:var(--cyan)">6</span><span class="label" style="color:var(--cyan)">Executor 监控中</span><span class="line"></span></div>
+    </div>
+  </div>`;
+  appendChat(d);
+  addAgentMsg('Playbook 已部署 ✓ Trust Score 预计从 75 → 78 (预案覆盖率提升)。Agent 在 Execution Path 持续监控入场条件，所有动作通过 GRPS 约束。');
+  // Update status bar
+  document.querySelector('.sb-right').innerHTML = `
+    <div class="sb-item">🛡️ GRPS <span class="val" style="color:var(--green)">Normal</span></div><div class="sb-sep"></div>
+    <div class="sb-item">🔐 Trust <span class="val" style="color:var(--purple)">78</span></div><div class="sb-sep"></div>
+    <div class="sb-item">Research <span class="val" style="color:var(--blue)">Active</span></div><div class="sb-sep"></div>
+    <div class="sb-item">Execution <span class="val" style="color:var(--cyan)">Monitoring</span></div>`;
 }
 
-// ═══ CHART ═══
+// Chart
 function drawChart() {
   const canvas = document.getElementById('chart-canvas');
   const wrap = canvas.parentElement;
-  canvas.width = wrap.clientWidth * 2;
-  canvas.height = wrap.clientHeight * 2;
-  canvas.style.width = wrap.clientWidth + 'px';
-  canvas.style.height = wrap.clientHeight + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(2, 2);
-  const W = wrap.clientWidth;
-  const H = wrap.clientHeight;
-  
-  // Generate candlestick data
-  const candles = [];
-  let price = 0.92;
-  const numCandles = 60;
-  for (let i = 0; i < numCandles; i++) {
-    const change = (Math.random() - 0.45) * 0.04;
-    const open = price;
-    const close = price + change;
-    const high = Math.max(open, close) + Math.random() * 0.02;
-    const low = Math.min(open, close) - Math.random() * 0.02;
-    candles.push({ o: open, c: close, h: high, l: low });
-    price = close;
-    // Create upward trend in last 15 candles
-    if (i > 44) price += 0.015 + Math.random() * 0.01;
+  canvas.width = wrap.clientWidth * 2; canvas.height = wrap.clientHeight * 2;
+  canvas.style.width = wrap.clientWidth + 'px'; canvas.style.height = wrap.clientHeight + 'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(2, 2);
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const candles = []; let price = 0.92; const N = 60;
+  for (let i = 0; i < N; i++) {
+    const ch = (Math.random() - 0.45) * 0.04;
+    const o = price, c = price + ch;
+    candles.push({ o, c, h: Math.max(o,c)+Math.random()*.02, l: Math.min(o,c)-Math.random()*.02 });
+    price = c; if (i > 44) price += .015 + Math.random()*.01;
   }
-  
-  const allPrices = candles.flatMap(c => [c.h, c.l]);
-  const minP = Math.min(...allPrices) - 0.05;
-  const maxP = Math.max(...allPrices) + 0.05;
-  
-  const px = 50; // left padding
-  const py = 20; // top padding
-  const cw = (W - px - 20) / numCandles;
-  const ch = H - py * 2;
-  
-  const toY = p => py + (1 - (p - minP) / (maxP - minP)) * ch;
-  const toX = i => px + i * cw + cw / 2;
-  
-  // Background grid
-  ctx.strokeStyle = 'rgba(42,45,62,0.4)';
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i < 6; i++) {
-    const y = py + (ch / 5) * i;
-    ctx.beginPath();
-    ctx.moveTo(px, y);
-    ctx.lineTo(W - 20, y);
-    ctx.stroke();
-    // Price labels
-    const pLabel = (maxP - (maxP - minP) * (i / 5)).toFixed(3);
-    ctx.fillStyle = '#6b7280';
-    ctx.font = '10px SF Mono, JetBrains Mono, monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('$' + pLabel, 2, y + 3);
-  }
-  
-  // Draw candles
-  candles.forEach((c, i) => {
-    const x = toX(i);
-    const isUp = c.c >= c.o;
-    const color = isUp ? '#22c55e' : '#ef4444';
-    const bodyTop = toY(Math.max(c.o, c.c));
-    const bodyBot = toY(Math.min(c.o, c.c));
-    const bodyH = Math.max(bodyBot - bodyTop, 1);
-    
-    // Wick
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x, toY(c.h));
-    ctx.lineTo(x, toY(c.l));
-    ctx.stroke();
-    
-    // Body
-    ctx.fillStyle = isUp ? color : color;
-    ctx.fillRect(x - cw * 0.35, bodyTop, cw * 0.7, bodyH);
-    if (!isUp) {
-      ctx.fillStyle = color;
-      ctx.fillRect(x - cw * 0.35, bodyTop, cw * 0.7, bodyH);
-    }
+  const all = candles.flatMap(c=>[c.h,c.l]);
+  const mn = Math.min(...all)-.05, mx = Math.max(...all)+.05;
+  const px=50,py=20,cw=(W-px-20)/N,ch=H-py*2;
+  const toY=p=>py+(1-(p-mn)/(mx-mn))*ch, toX=i=>px+i*cw+cw/2;
+  ctx.strokeStyle='rgba(42,45,62,.4)';ctx.lineWidth=.5;
+  for(let i=0;i<6;i++){const y=py+(ch/5)*i;ctx.beginPath();ctx.moveTo(px,y);ctx.lineTo(W-20,y);ctx.stroke();ctx.fillStyle='#6b7280';ctx.font='10px SF Mono,JetBrains Mono,monospace';ctx.textAlign='left';ctx.fillText('$'+(mx-(mx-mn)*(i/5)).toFixed(3),2,y+3);}
+  candles.forEach((c,i)=>{const x=toX(i);const up=c.c>=c.o;const col=up?'#22c55e':'#ef4444';const bt=toY(Math.max(c.o,c.c)),bb=toY(Math.min(c.o,c.c)),bh=Math.max(bb-bt,1);ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,toY(c.h));ctx.lineTo(x,toY(c.l));ctx.stroke();ctx.fillStyle=col;ctx.fillRect(x-cw*.35,bt,cw*.7,bh);});
+  // Levels
+  [{ p:1.20,col:'rgba(59,130,246,.06)',line:'rgba(59,130,246,.4)' }].forEach(lv=>{
+    if(lv.p>mn&&lv.p<mx){ctx.fillStyle=lv.col;ctx.fillRect(px,toY(1.22),W-px-20,toY(1.18)-toY(1.22));ctx.strokeStyle=lv.line;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(px,toY(1.20));ctx.lineTo(W-20,toY(1.20));ctx.stroke();ctx.setLineDash([]);}
   });
-  
-  // Draw key levels (Entry, SL, TP)
-  const lastPrice = candles[candles.length - 1].c;
-  
-  // Entry zone
-  const entryLow = 1.18, entryHigh = 1.22;
-  if (entryHigh > minP && entryLow < maxP) {
-    ctx.fillStyle = 'rgba(59,130,246,0.06)';
-    ctx.fillRect(px, toY(entryHigh), W - px - 20, toY(entryLow) - toY(entryHigh));
-    ctx.strokeStyle = 'rgba(59,130,246,0.4)';
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(px, toY(1.20)); ctx.lineTo(W - 20, toY(1.20)); ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  
-  // SL
-  const sl = 1.10;
-  if (sl > minP && sl < maxP) {
-    ctx.strokeStyle = 'rgba(239,68,68,0.5)';
-    ctx.setLineDash([6, 3]);
-    ctx.beginPath(); ctx.moveTo(px, toY(sl)); ctx.lineTo(W - 20, toY(sl)); ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  
-  // TP
-  const tp = 1.58;
-  if (tp > minP && tp < maxP) {
-    ctx.strokeStyle = 'rgba(34,197,94,0.5)';
-    ctx.setLineDash([6, 3]);
-    ctx.beginPath(); ctx.moveTo(px, toY(tp)); ctx.lineTo(W - 20, toY(tp)); ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  
-  // Volume bars at bottom
-  candles.forEach((c, i) => {
-    const x = toX(i);
-    const vol = 20 + Math.random() * 30;
-    const isUp = c.c >= c.o;
-    ctx.fillStyle = isUp ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
-    ctx.fillRect(x - cw * 0.35, H - vol, cw * 0.7, vol);
-  });
+  [1.10,1.58].forEach((p,i)=>{if(p>mn&&p<mx){ctx.strokeStyle=i===0?'rgba(239,68,68,.5)':'rgba(34,197,94,.5)';ctx.setLineDash([6,3]);ctx.beginPath();ctx.moveTo(px,toY(p));ctx.lineTo(W-20,toY(p));ctx.stroke();ctx.setLineDash([]);}});
+  candles.forEach((c,i)=>{const x=toX(i);const v=20+Math.random()*30;ctx.fillStyle=c.c>=c.o?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)';ctx.fillRect(x-cw*.35,H-v,cw*.7,v);});
 }
-
-function resizeChart() {
-  requestAnimationFrame(drawChart);
-}
-
-// ═══ INIT ═══
-window.addEventListener('load', () => {
-  drawChart();
-  // Auto-switch to signals tab to show the demo entry point
-  setTimeout(() => {
-    const sigTab = document.querySelectorAll('.sidebar-tab')[1];
-    switchSidebarTab(sigTab, 'tab-signals');
-  }, 800);
-});
-window.addEventListener('resize', resizeChart);
+function resizeChart(){requestAnimationFrame(drawChart)}
+window.addEventListener('load',drawChart);
+window.addEventListener('resize',resizeChart);
 </script>
-
 </body>
 </html>
